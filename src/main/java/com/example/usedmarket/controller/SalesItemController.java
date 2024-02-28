@@ -44,7 +44,7 @@ public class SalesItemController {
     // 물품 정보 수정
     @PutMapping("/items/{itemId}")
     public ResponseDto updateItem(@PathVariable("itemId") Long id,
-                                  @RequestBody SalesItemDto dto){
+                                  @RequestBody SalesItemDto dto) throws IllegalAccessException {
         service.updateItem(id, dto);
         return ResponseDto.response("물품 정보가 수정되었습니다.");
     }

@@ -35,6 +35,7 @@ public class SalesItemService {
         itemEntity.setItemImgUrl(dto.getItemImgUrl());
         itemEntity.setStatus(dto.getStatus());
         itemEntity.setWriter(dto.getWriter());
+        itemEntity.setPassword(dto.getPassword());
 
         return SalesItemDto.fromEntity(repository.save(itemEntity));
     }
@@ -73,27 +74,19 @@ public class SalesItemService {
         return itemEntityPage.map(SalesItemDto::fromEntity);
     }
 
-    // update
-    public SalesItemDto updateItem(Long id, SalesItemDto dto){
-        Optional<SalesItemEntity> optionalItem = repository.findById(id);
-        if (optionalItem.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        SalesItemEntity salesEntity = optionalItem.get();
+    /* update
+    1. checkUser를 이용하여 사용자 검증
+        1) param : body에서 요청으로 들어온 값이므로, 현재 db에 있는 값과 비교 가능
+    2. 데이터에 반영할 값은 따로 저장
+     */
+    public SalesItemDto updateItem(Long id, SalesItemDto dto) throws IllegalAccessException {
+        // 유저 검증
+        SalesItemEntity salesEntity = checkUser(id,dto.getWriter(),dto.getPassword());
         salesEntity.setMinPrice(dto.getMinPrice());
         return SalesItemDto.fromEntity(repository.save(salesEntity));
     }
 
     // image
-
-    // delete
-    public void deleteItem(Long id){
-        Optional<SalesItemEntity> optionalItem = repository.findById(id);
-        if(optionalItem.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        SalesItemEntity salesEntity = optionalItem.get();
-        repository.deleteById(id);
-    }
-
     public ResponseDto updateImage(Long id, MultipartFile itemImage) {
         // salesEntity에서 게시물 찾기
         Optional<SalesItemEntity> optionalItem = repository.findById(id);
@@ -137,4 +130,33 @@ public class SalesItemService {
         repository.save(salesItemEntity);
         return ResponseDto.response("이미지가 등록되었습니다.");
     }
+
+    /* delete
+    게시글 id과 일치하는 게시글 삭제
+    */
+    public void deleteItem(Long id){
+        Optional<SalesItemEntity> optionalItem = repository.findById(id);
+        if(optionalItem.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        SalesItemEntity salesEntity = optionalItem.get();
+        repository.deleteById(id);
+    }
+
+    /* 사용자 일치를 판단하는 checkUser()
+    - id, writer, password 입력 시 기존의 db의 회원 정보와 일치하는지 확인
+    - id : 게시글 id
+    - writer : 게시글 작성자
+    - password : 게시글 작성자가 첨부한 비밀번호
+     */
+    public SalesItemEntity checkUser(Long id, String writer, String password) throws IllegalAccessException {
+        Optional<SalesItemEntity> optionalItem = repository.findById(id);
+        if(optionalItem.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        SalesItemEntity entity = optionalItem.get();
+
+        if(!entity.getWriter().equals(writer) || !entity.getPassword().equals(password))
+            throw new IllegalAccessException("사용자 정보가 일치하지 않습니다.");
+        return entity;
+    }
+
 }

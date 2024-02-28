@@ -12,6 +12,7 @@ public class SalesItemDto {
     private String status;
     private String writer;
     private String minPrice;
+    private String password;
 
     public static SalesItemDto fromEntity(SalesItemEntity entity){
         SalesItemDto dto = new SalesItemDto();
@@ -22,6 +23,7 @@ public class SalesItemDto {
         dto.setStatus(entity.getStatus());
         dto.setWriter(entity.getWriter());
         dto.setMinPrice(entity.getMinPrice());
+        dto.setPassword(entity.getPassword());
         return dto;
     }
 }

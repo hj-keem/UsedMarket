@@ -20,4 +20,5 @@ public class SalesItemEntity {
     private String status;
     private String writer;
     private String minPrice;
+    private String password;
 }
