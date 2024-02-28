@@ -87,12 +87,12 @@ public class SalesItemService {
     }
 
     // image
-    public ResponseDto updateImage(Long id, MultipartFile itemImage) {
-        // salesEntity에서 게시물 찾기
-        Optional<SalesItemEntity> optionalItem = repository.findById(id);
-        // 게시물 존재 확인
-        if(optionalItem.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    public ResponseDto updateImage(Long id, MultipartFile itemImage, String writer, String password) throws IllegalAccessException {
+//        // salesEntity에서 게시물 찾기
+//        Optional<SalesItemEntity> optionalItem = repository.findById(id);
+//        // 게시물 존재 확인
+//        if(optionalItem.isEmpty())
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
         // 2. 파일을 어디에 업로드 할건지
         // media/{userId}/profile.{파일 확장자}
@@ -125,7 +125,7 @@ public class SalesItemService {
             // http://localhost:8080/static/1/profile.png
             // SalesItemEntity salesItemEntity = optionalItem.get();
             // 찾은 Id를 salesItemEntity 변수에 저장
-        SalesItemEntity salesItemEntity = optionalItem.get();
+        SalesItemEntity salesItemEntity = checkUser(id, writer, password);
         salesItemEntity.setItemImgUrl(String.format("/static/%d/%s", id, profileFilename));
         repository.save(salesItemEntity);
         return ResponseDto.response("이미지가 등록되었습니다.");
@@ -134,13 +134,14 @@ public class SalesItemService {
     /* delete
     게시글 id과 일치하는 게시글 삭제
     */
-    public void deleteItem(Long id){
-        Optional<SalesItemEntity> optionalItem = repository.findById(id);
-        if(optionalItem.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        SalesItemEntity salesEntity = optionalItem.get();
+    public void deleteItem(Long id, SalesItemDto dto) throws IllegalAccessException {
+//        Optional<SalesItemEntity> optionalItem = repository.findById(id);
+//        if(optionalItem.isEmpty())
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        SalesItemEntity salesEntity = checkUser(id, dto.getWriter(), dto.getPassword());
         repository.deleteById(id);
     }
+
 
     /* 사용자 일치를 판단하는 checkUser()
     - id, writer, password 입력 시 기존의 db의 회원 정보와 일치하는지 확인

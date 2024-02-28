@@ -55,15 +55,18 @@ public class SalesItemController {
     @PutMapping(value = "/items/{itemId}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseDto updateImage(
             @PathVariable("itemId")Long id,
-            @RequestParam("image") MultipartFile itemImage)throws IOException {
-        return service.updateImage(id,itemImage);
+            @RequestParam("image") MultipartFile itemImage,
+            @RequestParam("writer") String writer,
+            @RequestParam("password") String password) throws IOException, IllegalAccessException {
+        return service.updateImage(id,itemImage, writer, password);
     }
 
     // deleteItem
     // 등록된 물품 삭제
     @DeleteMapping("/items/{itemId}")
-    public ResponseDto deleteItem(@PathVariable("itemId")Long id){
-        service.deleteItem(id);
+    public ResponseDto deleteItem(@PathVariable("itemId")Long id,
+                                  @RequestBody SalesItemDto dto) throws IllegalAccessException {
+        service.deleteItem(id, dto);
         return ResponseDto.response("물품이 삭제되었습니다.");
     }
 }
