@@ -25,7 +25,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor //final의 생성자를 만들어준다.
 public class SalesItemService {
-    private final SalesItemRepo repository;
+    private final SalesItemRepo itemRepository;
 
     // createItem
     public SalesItemDto createItem(SalesItemDto dto) {
@@ -37,12 +37,12 @@ public class SalesItemService {
         itemEntity.setWriter(dto.getWriter());
         itemEntity.setPassword(dto.getPassword());
 
-        return SalesItemDto.fromEntity(repository.save(itemEntity));
+        return SalesItemDto.fromEntity(itemRepository.save(itemEntity));
     }
 
     // readItem
     public SalesItemDto readItem(Long id){
-        Optional<SalesItemEntity> entity = repository.findById(id);
+        Optional<SalesItemEntity> entity = itemRepository.findById(id);
         if(entity.isEmpty())
             // 만약 찾고자하는 id의 데이터가 없다면 404에러
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -50,21 +50,12 @@ public class SalesItemService {
     }
 
     // readAllItem
-    public SalesItemDto readAllItem(){
-        List<SalesItemEntity> itemList = repository.findAll();
-        // for(타입 변수명 : 콜렉션명)
-        for(SalesItemEntity item : itemList){
-            itemList.add(item);
-        }
-        return (SalesItemDto) itemList;
-    }
-
     public Page<SalesItemDto> readAllPaged(Integer page, Integer limit) {
         // 객체 생성 및 첫 번째 페이지(0)에 해당하는 아이템을 3개씩 조회
         Pageable pageable = PageRequest.of(0, 25);
         // findAll 호출 시 Pageable 전달
         // Page: 페이지에 대한 정보를 포함한 객체
-        Page<SalesItemEntity> itemEntityPage = repository.findAll(pageable);
+        Page<SalesItemEntity> itemEntityPage = itemRepository.findAll(pageable);
         // 순회
         List<SalesItemDto> itemDtoList = new ArrayList<>();
         // for(타입 변수명 : 콜렉션명
@@ -83,16 +74,11 @@ public class SalesItemService {
         // 유저 검증
         SalesItemEntity salesEntity = checkUser(id,dto.getWriter(),dto.getPassword());
         salesEntity.setMinPrice(dto.getMinPrice());
-        return SalesItemDto.fromEntity(repository.save(salesEntity));
+        return SalesItemDto.fromEntity(itemRepository.save(salesEntity));
     }
 
     // image
     public ResponseDto updateImage(Long id, MultipartFile itemImage, String writer, String password) throws IllegalAccessException {
-//        // salesEntity에서 게시물 찾기
-//        Optional<SalesItemEntity> optionalItem = repository.findById(id);
-//        // 게시물 존재 확인
-//        if(optionalItem.isEmpty())
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
         // 2. 파일을 어디에 업로드 할건지
         // media/{userId}/profile.{파일 확장자}
@@ -127,7 +113,7 @@ public class SalesItemService {
             // 찾은 Id를 salesItemEntity 변수에 저장
         SalesItemEntity salesItemEntity = checkUser(id, writer, password);
         salesItemEntity.setItemImgUrl(String.format("/static/%d/%s", id, profileFilename));
-        repository.save(salesItemEntity);
+        itemRepository.save(salesItemEntity);
         return ResponseDto.response("이미지가 등록되었습니다.");
     }
 
@@ -135,11 +121,11 @@ public class SalesItemService {
     게시글 id과 일치하는 게시글 삭제
     */
     public void deleteItem(Long id, SalesItemDto dto) throws IllegalAccessException {
-//        Optional<SalesItemEntity> optionalItem = repository.findById(id);
+//        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
 //        if(optionalItem.isEmpty())
 //            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         SalesItemEntity salesEntity = checkUser(id, dto.getWriter(), dto.getPassword());
-        repository.deleteById(id);
+        itemRepository.deleteById(id);
     }
 
 
@@ -150,7 +136,7 @@ public class SalesItemService {
     - password : 게시글 작성자가 첨부한 비밀번호
      */
     public SalesItemEntity checkUser(Long id, String writer, String password) throws IllegalAccessException {
-        Optional<SalesItemEntity> optionalItem = repository.findById(id);
+        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
         if(optionalItem.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         SalesItemEntity entity = optionalItem.get();
@@ -159,5 +145,4 @@ public class SalesItemService {
             throw new IllegalAccessException("사용자 정보가 일치하지 않습니다.");
         return entity;
     }
-
 }
