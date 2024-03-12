@@ -48,4 +48,14 @@ public class NegoController {
         negoService.deleteNego(itemId, id, dto);
         return ResponseDto.response("제안이 삭제되었습니다.");
     }
+
+    // 제안 수락 | 거절
+    @PutMapping("/items/{itemId}/proposals/{negoId}")
+    public NegoDto status(
+            @PathVariable("itemId") Long itemId,
+            @PathVariable("negoId") Long id,
+            @RequestBody NegoDto dto
+    ) throws IllegalAccessException {
+        return negoService.acceptOrReject(itemId, id, dto);
+    }
 }
