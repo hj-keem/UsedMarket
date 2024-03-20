@@ -30,6 +30,7 @@ public class NegoService {
         SalesItemEntity itemEntity = itemCheck(itemId);
         NegoEntity negoEntity = new NegoEntity();
         negoEntity.setItemId(itemId);
+        negoEntity.setSalesItem(itemEntity);
         negoEntity.setSuggestedPrice(dto.getSuggestedPrice());
         negoEntity.setStatus(dto.getStatus());
         negoEntity.setWriter(dto.getWriter());
@@ -92,12 +93,16 @@ public class NegoService {
         // 구매 확정 상태일 때 : 상태는 '판매 완료' 으로 바뀌게 된다.
         if(negoEntity.getStatus().equals("확정")){
             negoEntity.setStatus("판매 완료");
+            itemEntity.setStatus("판매 완료");
+            negoRepository.save(negoEntity);
             // 구매 확정 시 다른 제안 거절
-            List<NegoEntity> negotiationEntities = negoRepository.findBySalesItemId(itemId);
-            for (NegoEntity entity : negotiationEntities) {
-                if (!entity.getId().equals(id)) {
-                    entity.setStatus("거절");
-                    negoRepository.save(entity);
+            if(negoEntity.getStatus().equals("판매 완료")){
+                List<NegoEntity> negotiationEntities = negoRepository.findBySalesItemId(itemId);
+                for (NegoEntity entity : negotiationEntities) {
+                    if (!entity.getId().equals(id)) {
+                        entity.setStatus("거절");
+                        negoRepository.save(entity);
+                    }
                 }
             }
         }

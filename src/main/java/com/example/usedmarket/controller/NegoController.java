@@ -50,12 +50,21 @@ public class NegoController {
     }
 
     // 제안 수락 | 거절
-    @PutMapping("/items/{itemId}/proposals/{negoId}")
+    @PutMapping("/items/{itemId}/proposals/{negoId}/status")
     public NegoDto status(
             @PathVariable("itemId") Long itemId,
             @PathVariable("negoId") Long id,
             @RequestBody NegoDto dto
     ) throws IllegalAccessException {
         return negoService.acceptOrReject(itemId, id, dto);
+    }
+
+    @PutMapping("/items/{itemId}/proposals/{negoId}/confirm")
+    public NegoDto confirm(
+            @PathVariable("itemId") Long itemId,
+            @PathVariable("negoId") Long id,
+            @RequestBody NegoDto dto
+    ) throws IllegalAccessException {
+        return negoService.purchaseConfirm(itemId, id, dto);
     }
 }
