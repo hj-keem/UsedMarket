@@ -42,10 +42,9 @@ public class NegoController {
     // 제안 삭제
     @DeleteMapping("/items/{itemId}/proposals/{negoId}")
     public ResponseDto deleteNego(@PathVariable("itemId") Long itemId,
-                                  @PathVariable("negoId") Long id,
-                                  @RequestBody NegoDto dto) throws IllegalAccessException
+                                  @PathVariable("negoId") Long id) throws IllegalAccessException
     {
-        negoService.deleteNego(itemId, id, dto);
+        negoService.deleteNego(itemId, id);
         return ResponseDto.response("제안이 삭제되었습니다.");
     }
 
