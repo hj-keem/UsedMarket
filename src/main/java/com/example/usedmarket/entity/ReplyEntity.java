@@ -1,9 +1,6 @@
 package com.example.usedmarket.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -17,4 +14,9 @@ public class ReplyEntity {
     private String reply;
     private String password;
     private String writer;
+
+    @ManyToOne
+    private UserEntity addUser;
+    @ManyToOne
+    private SalesItemEntity addItem;
 }
