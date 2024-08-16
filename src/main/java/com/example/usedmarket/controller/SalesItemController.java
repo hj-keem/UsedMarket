@@ -64,9 +64,8 @@ public class SalesItemController {
     // deleteItem
     // 등록된 물품 삭제
     @DeleteMapping("/items/{itemId}")
-    public ResponseDto deleteItem(@PathVariable("itemId")Long id,
-                                  @RequestBody SalesItemDto dto) throws IllegalAccessException {
-        service.deleteItem(id, dto);
+    public ResponseDto deleteItem(@PathVariable("itemId")Long id) throws IllegalAccessException {
+        service.deleteItem(id);
         return ResponseDto.response("물품이 삭제되었습니다.");
     }
 }
