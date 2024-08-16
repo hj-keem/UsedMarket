@@ -3,16 +3,20 @@ package com.example.usedmarket.service;
 import com.example.usedmarket.dto.ResponseDto;
 import com.example.usedmarket.dto.SalesItemDto;
 import com.example.usedmarket.entity.SalesItemEntity;
+import com.example.usedmarket.entity.UserEntity;
 import com.example.usedmarket.repo.SalesItemRepo;
+import com.example.usedmarket.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,21 +30,31 @@ import java.util.Optional;
 @RequiredArgsConstructor //final의 생성자를 만들어준다.
 public class SalesItemService {
     private final SalesItemRepo itemRepository;
+    private final UserRepo userRepository;
 
-    // createItem
+    /* createItem
+    로그인 한 객체를 받아오는 방법
+    1. SecurityContextHolder를 이용해 사용자 정보를 받아온다.
+    2. 받아온 정보를 salesItem Entity에 올린다. ( 사용자 정보 기억 )
+    */
     public SalesItemDto createItem(SalesItemDto dto) {
+        // 현재 사용자의 인증 정보를 가져오기
+        String auth = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findAllByUsername(auth);
+
         SalesItemEntity itemEntity = new SalesItemEntity();
         itemEntity.setTitle(dto.getTitle());
         itemEntity.setDescription(dto.getDescription());
         itemEntity.setItemImgUrl(dto.getItemImgUrl());
         itemEntity.setStatus(dto.getStatus());
-        itemEntity.setWriter(dto.getWriter());
-        itemEntity.setPassword(dto.getPassword());
+        itemEntity.setAddUser(user);
 
         return SalesItemDto.fromEntity(itemRepository.save(itemEntity));
     }
 
-    // readItem
+    /* readItem
+    모든 사람이 읽을 수 있으므로 권한설정을 GET은 전부 permitAll()
+    */
     public SalesItemDto readItem(Long id){
         Optional<SalesItemEntity> entity = itemRepository.findById(id);
         if(entity.isEmpty())
@@ -48,6 +62,7 @@ public class SalesItemService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return SalesItemDto.fromEntity(entity.get());
     }
+
 
     // readAllItem
     public Page<SalesItemDto> readAllPaged(Integer page, Integer limit) {
@@ -66,23 +81,46 @@ public class SalesItemService {
     }
 
     /* update
-    1. checkUser를 이용하여 사용자 검증
-        1) param : body에서 요청으로 들어온 값이므로, 현재 db에 있는 값과 비교 가능
-    2. 데이터에 반영할 값은 따로 저장
-     */
+    게시글 수정하기
+    1. SecurityContextHolder를 이용해 사용자 정보를 받아온다.
+    2. salesEntity에 있는 사용자 정보와 일치하는 지 확인한다.
+    3. 일치한다면 로직 진행
+    */
     public SalesItemDto updateItem(Long id, SalesItemDto dto) throws IllegalAccessException {
-        // 유저 검증
-        SalesItemEntity salesEntity = checkUser(id,dto.getWriter(),dto.getPassword());
+        // 현재 사용중인 사용자의 정보를 받아온다.
+        String auth = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findAllByUsername(auth);
+
+        // 게시글이 존재하는지 확인
+        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
+        if (optionalItem.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        SalesItemEntity salesEntity = optionalItem.get();
+
+        // 현재 사용중인 유저가 게시글을 올린 DB의 유저와 일치한다면 진행
+        if (!user.equals(salesEntity.getAddUser()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+        salesEntity.setTitle(dto.getTitle());
+        salesEntity.setDescription(dto.getDescription());
         salesEntity.setMinPrice(dto.getMinPrice());
+        salesEntity.setStatus(dto.getStatus());
         return SalesItemDto.fromEntity(itemRepository.save(salesEntity));
     }
 
     // image
-    public ResponseDto updateImage(Long id, MultipartFile itemImage, String writer, String password) throws IllegalAccessException {
+    public ResponseDto updateImage(Long id, MultipartFile itemImage, String writer, String password) throws IllegalAccessException, IOException {
+        // 현재 사용중인 사용자의 정보를 받아온다.
+        String auth = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findAllByUsername(auth);
 
-        // 2. 파일을 어디에 업로드 할건지
-        // media/{userId}/profile.{파일 확장자}
-        // 2-1. 폴더만 만드는 과정
+        // 게시글이 존재하는지 확인
+        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
+        if (optionalItem.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        SalesItemEntity salesEntity = optionalItem.get();
+
+        // 이미지 폴더 생성 및 이미지 url 생성
         String profileDir = "media/items/";
         try {
             Files.createDirectories(Path.of(profileDir));
@@ -90,41 +128,43 @@ public class SalesItemService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        // 2-2. 확장자를 포함한 이미지 이름 만들기 (profile.{확장자})
-        String originalFilename = itemImage.getOriginalFilename();
-        String[] fileNameSplit = originalFilename.split("\\.");
-        String extension = fileNameSplit[fileNameSplit.length - 1]; //마지막 배열은 확장자가 되겠지?
-        String profileFilename = "Image." + extension;
+        // 확장자를 포함한 이미지 이름 만들기 (profile.{확장자})
+        String[] fileNameSplit = itemImage.getOriginalFilename().split("\\.");
+        String extension = fileNameSplit[fileNameSplit.length - 1]; // 확장자 추출
+        String fileName = System.currentTimeMillis() + "." + extension;
+        itemImage.transferTo(Path.of(profileDir + fileName));
 
-        // 2-3. 폴더와 파일 경로를 포함한 이름 만들기
-        String profilePath = profileDir + profileFilename;
+        // 이미지 URL 생성
+        String crerateImageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("static/img/") // 이미지 업로드 경로
+                .path(fileName)
+                .toUriString();
 
-        // 3. MultipartFile 을 저장하기
-        try {
-            itemImage.transferTo(Path.of(profilePath));
-        } catch (IOException e) {
-            log.info(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        // 4. Entity 업데이트 (정적 프로필 이미지를 회수할 수 있는 URL)
-            // http://localhost:8080/static/1/profile.png
-            // SalesItemEntity salesItemEntity = optionalItem.get();
-            // 찾은 Id를 salesItemEntity 변수에 저장
-        SalesItemEntity salesItemEntity = checkUser(id, writer, password);
-        salesItemEntity.setItemImgUrl(String.format("/static/%d/%s", id, profileFilename));
-        itemRepository.save(salesItemEntity);
+        salesEntity.setItemImgUrl(crerateImageUrl);
+        itemRepository.save(salesEntity);
         return ResponseDto.response("이미지가 등록되었습니다.");
     }
 
     /* delete
-    게시글 id과 일치하는 게시글 삭제
+    1. SecurityContextHolder를 이용해 사용자 정보를 받아온다.
+    2. salesEntity에 있는 사용자 정보와 일치하는 지 확인한다.
+    3. 일치한다면 로직 진행
     */
-    public void deleteItem(Long id, SalesItemDto dto) throws IllegalAccessException {
-//        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
-//        if(optionalItem.isEmpty())
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        SalesItemEntity salesEntity = checkUser(id, dto.getWriter(), dto.getPassword());
+    public void deleteItem(Long id) throws IllegalAccessException {
+        // 현재 사용중인 사용자 정보 받아오기
+        String auth = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findAllByUsername(auth);
+
+        // 게시물 찾기
+        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
+        // 게시물이 존재하는 지 확인
+        if (optionalItem.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        SalesItemEntity salesEntity = optionalItem.get();
+
+        // 현재 사용중인 유저가 게시글을 올린 DB의 유저와 일치한다면 진행
+        if (!user.equals(salesEntity.getAddUser()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         itemRepository.deleteById(id);
     }
 
@@ -135,14 +175,14 @@ public class SalesItemService {
     - writer : 게시글 작성자
     - password : 게시글 작성자가 첨부한 비밀번호
      */
-    public SalesItemEntity checkUser(Long id, String writer, String password) throws IllegalAccessException {
-        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
-        if(optionalItem.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        SalesItemEntity entity = optionalItem.get();
-
-        if(!entity.getWriter().equals(writer) || !entity.getPassword().equals(password))
-            throw new IllegalAccessException("사용자 정보가 일치하지 않습니다.");
-        return entity;
-    }
+//    public SalesItemEntity checkUser(Long id, String writer, String password) throws IllegalAccessException {
+//        Optional<SalesItemEntity> optionalItem = itemRepository.findById(id);
+//        if(optionalItem.isEmpty())
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+//        SalesItemEntity entity = optionalItem.get();
+//
+//        if(!entity.getWriter().equals(writer) || !entity.getPassword().equals(password))
+//            throw new IllegalAccessException("사용자 정보가 일치하지 않습니다.");
+//        return entity;
+//    }
 }
