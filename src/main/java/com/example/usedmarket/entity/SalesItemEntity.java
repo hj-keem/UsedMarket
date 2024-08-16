@@ -1,11 +1,11 @@
 package com.example.usedmarket.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Setter
@@ -18,7 +18,12 @@ public class SalesItemEntity {
     private String description;
     private String itemImgUrl;
     private String status;
-    private String writer;
     private String minPrice;
-    private String password;
+
+    @ManyToOne
+    private UserEntity addUser;
+    @OneToMany
+    private List<ReplyEntity> replyList = new ArrayList<>();
+    @OneToMany
+    private List<NegoEntity>negoList = new ArrayList<>();
 }
