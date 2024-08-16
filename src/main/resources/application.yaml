@@ -1,12 +1,20 @@
 spring:
+  security:
+    user:
+      name: user
+      password: 1234
   datasource:
-    url: jdbc:sqlite:usedmarket.sqlite
-    driver-class-name: org.sqlite.JDBC
+    url: jdbc:mysql://localhost:3306/usedmarket
+    username: root
+    password: 1234dnehd
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: create
     show-sql: true
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    properties:
+        hibernate:
+          dialect: org.hibernate.dialect.MySQLDialect
   mvc:
     static-path-pattern: /static/**
   web:
@@ -16,3 +24,5 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+jwt:
+  secret: aaaabbbsdifqbvaesoioegwaaaabbbsdifqbvaesoioegwaaaabbbsdifqbvaesasdfqve
