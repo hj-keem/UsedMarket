@@ -37,7 +37,7 @@ public class SalesItemService {
     1. SecurityContextHolder를 이용해 사용자 정보를 받아온다.
     2. 받아온 정보를 salesItem Entity에 올린다. ( 사용자 정보 기억 )
     */
-    public SalesItemDto createItem(SalesItemDto dto) {
+    public SalesItemDto createItem(SalesItemDto dto, MultipartFile itemImage) throws IOException {
         // 현재 사용자의 인증 정보를 가져오기
         String auth = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepository.findAllByUsername(auth);
@@ -45,12 +45,39 @@ public class SalesItemService {
         SalesItemEntity itemEntity = new SalesItemEntity();
         itemEntity.setTitle(dto.getTitle());
         itemEntity.setDescription(dto.getDescription());
-        itemEntity.setItemImgUrl(dto.getItemImgUrl());
         itemEntity.setStatus(dto.getStatus());
+        itemEntity.setMinPrice(dto.getMinPrice());
         itemEntity.setAddUser(user);
 
+        // 이미지 url 생성
+        if (itemImage == null || itemImage.isEmpty()) {
+            dto.setItemImgUrl(null);
+        } else {
+            String profileDir = "media/items/";
+            try {
+                Files.createDirectories(Path.of(profileDir));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            // 이미지를 업로드하고 고유한 파일 이름 생성
+            // 이미지 이름 만들기
+            String[] fileNameSplit = itemImage.getOriginalFilename().split("\\.");
+            String extension = fileNameSplit[fileNameSplit.length - 1]; // 확장자 추출
+            String fileName = System.currentTimeMillis() + "." + extension;
+            itemImage.transferTo(Path.of(profileDir + fileName));
+
+            // 이미지 URL 생성
+            String crerateImageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("static/items/") // 이미지 업로드 경로
+                    .path(fileName)
+                    .toUriString();
+
+            itemEntity.setItemImgUrl(crerateImageUrl); // url 경로 추가
+        }
         return SalesItemDto.fromEntity(itemRepository.save(itemEntity));
     }
+
 
     /* readItem
     모든 사람이 읽을 수 있으므로 권한설정을 GET은 전부 permitAll()
