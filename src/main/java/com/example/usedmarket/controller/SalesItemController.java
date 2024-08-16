@@ -20,9 +20,10 @@ public class SalesItemController {
 
     // create
     // 물품 정보 등록
-    @PostMapping("/items")
-    public SalesItemDto createItem(@RequestBody SalesItemDto dto){
-        return service.createItem(dto);
+    @PostMapping(value = "/items", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SalesItemDto createItem(@RequestPart("dto") SalesItemDto dto,
+                                   @RequestPart(value = "image", required = false) MultipartFile itemImage) throws IOException {
+        return service.createItem(dto,itemImage);
     }
 
     // readItem
