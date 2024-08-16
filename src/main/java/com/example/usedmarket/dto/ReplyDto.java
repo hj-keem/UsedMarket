@@ -9,8 +9,8 @@ public class ReplyDto {
     private Long itemId;
     private String content;
     private String reply;
-    private String password;
-    private String writer;
+//    private String password;
+//    private String writer;
 
     public static ReplyDto fromEntity(ReplyEntity entity){
         ReplyDto dto = new ReplyDto();
@@ -18,8 +18,8 @@ public class ReplyDto {
         dto.setItemId(entity.getItemId());
         dto.setReply(entity.getReply());
         dto.setContent(entity.getContent());
-        dto.setWriter(entity.getWriter());
-        dto.setPassword(entity.getPassword());
+//        dto.setWriter(entity.getWriter());
+//        dto.setPassword(entity.getPassword());
         return dto;
     }
 }
