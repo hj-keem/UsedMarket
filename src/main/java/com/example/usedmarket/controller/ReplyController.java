@@ -21,7 +21,7 @@ public class ReplyController {
     }
 
     // 댓글 조회
-    @GetMapping("/item/{itemId}/reply")
+    @GetMapping("/items/{itemId}/reply")
     public Page<ReplyDto> readAllReplyPage(
             @RequestParam("page") Integer page,
             @RequestParam("limit") Integer limit
@@ -30,7 +30,7 @@ public class ReplyController {
     }
 
     // 댓글 수정
-    @PutMapping("/item/{itemId}/reply/{replyId}")
+    @PutMapping("/items/{itemId}/reply/{replyId}")
     public ResponseDto updateReply(
             @PathVariable("itemId") Long itemId,
             @PathVariable("replyId") Long id,
@@ -40,12 +40,11 @@ public class ReplyController {
     }
 
     // 댓글 삭제
-    @DeleteMapping("/item/{itemId}/reply/{replyId}")
+    @DeleteMapping("/items/{itemId}/reply/{replyId}")
     public ResponseDto deleteReply(
             @PathVariable("itemId") Long itemId,
-            @PathVariable("replyId") Long id,
-            @RequestBody ReplyDto dto) throws IllegalAccessException {
-        service.deleteReply(itemId, id, dto);
+            @PathVariable("replyId") Long id) throws IllegalAccessException {
+        service.deleteReply(itemId, id);
         return ResponseDto.response("댓글이 삭제되었습니다.");
     }
 }
