@@ -24,14 +24,30 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-	// sqlite
-	runtimeOnly 'org.xerial:sqlite-jdbc:3.41.2.2'
-	runtimeOnly 'org.hibernate.orm:hibernate-community-dialects:6.2.4.Final'
+	// mysql
+	implementation 'mysql:mysql-connector-java:8.0.33'
+
+	// lombok
+	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// thymleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// jwt
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	//test
+	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 }
 
 tasks.named('test') {
