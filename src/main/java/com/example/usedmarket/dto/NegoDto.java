@@ -9,8 +9,8 @@ public class NegoDto {
     private Long itemId;
     private String suggestedPrice;
     private String status;
-    private String writer;
-    private String password;
+//    private String writer;
+//    private String password;
 
     public static NegoDto fromEntity(NegoEntity entity){
         NegoDto dto = new NegoDto();
@@ -18,8 +18,8 @@ public class NegoDto {
         dto.setItemId(entity.getItemId());
         dto.setSuggestedPrice(entity.getSuggestedPrice());
         dto.setStatus(entity.getStatus());
-        dto.setWriter(entity.getWriter());
-        dto.setPassword(entity.getPassword());
+//        dto.setWriter(entity.getWriter());
+//        dto.setPassword(entity.getPassword());
         return dto;
     }
 }
