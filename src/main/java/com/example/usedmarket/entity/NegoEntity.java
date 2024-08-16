@@ -12,11 +12,10 @@ public class NegoEntity {
     private Long itemId;
     private String suggestedPrice;
     private String status;
-    private String writer;
-    private String password;
 
+    @ManyToOne
+    private UserEntity addUser;
     // 다대일 관계를 설정 (NegoEntity에서 관계설정을 했기 때문에 SalesItemEntity에는 따로 해주지 않아도 됨)
     @ManyToOne
-    @JoinColumn(name = "salesItemId")
-    private SalesItemEntity salesItem;
+    private SalesItemEntity addItem;
 }
