@@ -1,6 +1,7 @@
 package com.example.usedmarket.dto;
 
 import com.example.usedmarket.entity.SalesItemEntity;
+import com.example.usedmarket.entity.UserEntity;
 import lombok.Data;
 
 @Data
@@ -10,9 +11,8 @@ public class SalesItemDto {
     private String description;
     private String itemImgUrl;
     private String status;
-    private String writer;
     private String minPrice;
-    private String password;
+//    private UserEntity addUser;
 
     public static SalesItemDto fromEntity(SalesItemEntity entity){
         SalesItemDto dto = new SalesItemDto();
@@ -21,9 +21,9 @@ public class SalesItemDto {
         dto.setDescription(entity.getDescription());
         dto.setItemImgUrl(entity.getItemImgUrl());
         dto.setStatus(entity.getStatus());
-        dto.setWriter(entity.getWriter());
         dto.setMinPrice(entity.getMinPrice());
-        dto.setPassword(entity.getPassword());
+//        dto.setAddUser(entity.getAddUser());
+
         return dto;
     }
 }
